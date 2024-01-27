@@ -15,4 +15,4 @@ jobs:
             host: ${{ secrets.HOST_DEV }}
             username: ${{ secrets.USERNAME }}
             script: |
-                echo "HI I am about to code "
+                echo "HI I am about to code  "
