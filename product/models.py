@@ -7,7 +7,6 @@ class Product(models.Model):
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    similar_products = models.ManyToManyField('self', blank=True)
     tags = models.ManyToManyField('Tag', blank=True,related_name='product_tags')
 
     def __str__(self):

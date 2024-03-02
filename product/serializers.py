@@ -40,7 +40,6 @@ class ProductSerializer(serializers.ModelSerializer):
             "description",
             "price",
             "category",
-            "similar_products",
             "colors",
             "tags"
         ]

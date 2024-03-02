@@ -1,5 +1,5 @@
 from django.db import models
-from product.models import Color, Product, Size
+from product.models import Color, Size
 
 
 class ProductVariant(models.Model):
