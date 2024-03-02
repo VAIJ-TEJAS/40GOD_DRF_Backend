@@ -12,4 +12,4 @@ class ProductVariant(models.Model):
     quantity = models.PositiveIntegerField()
 
     def __str__(self):
-        return f"{self.product.name} - {self.color.color_name} - {self.size.text} - Qty: {self.quantity}"
+        return f"{self.color.color_name} - {self.size.text} - Qty: {self.quantity}"

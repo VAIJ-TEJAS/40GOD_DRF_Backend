@@ -23,7 +23,7 @@ class Color(models.Model):
         return f"{self.product.sku} {self.product.name} {self.color_name} ({self.hex_code})"
 
 class Image(models.Model):
-    color = models.ForeignKey(Color, on_delete=models.CASCADE, related_name='image_product')
+    color = models.ForeignKey(Color, on_delete=models.CASCADE, related_name='image_color')
     image = models.ImageField(upload_to='product_images/')
 
     def __str__(self):
