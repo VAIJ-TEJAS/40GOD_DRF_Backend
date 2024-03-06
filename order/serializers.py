@@ -1,8 +1,8 @@
+from rest_framework import serializers
 from inventory.models import ProductVariant
 from inventory.serializers import ProductVariantSerializer
 from payment.serializers import PaymentSerializer
 from product.serializers import ColorsSerializer, SizeSerializer
-from rest_framework import serializers
 from shipment.serializers import ShipmentSerializer
 from .models import Order, OrderItem
 
