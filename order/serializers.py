@@ -33,6 +33,7 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "user",
+            "status",
             "payment",
             "shipment",
             "date",
