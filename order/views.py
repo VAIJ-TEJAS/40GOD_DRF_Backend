@@ -10,12 +10,14 @@ from cart.models import CartItem
 from shipment.models import Shipment
 from payment.models import Payment
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 import razorpay
+import os
 
+client = razorpay.Client(auth=(os.getenv("KEY_ID"), os.getenv("KEY_SECRET")))
 
+@csrf_exempt
 def create_order(request):
-    client = razorpay.Client(auth=("YOUR_RAZORPAY_KEY", "YOUR_RAZORPAY_SECRET"))
-
     # Create an order
     order_amount = 5000  # Amount in paise (e.g., 5000 paise = ₹50)
     order_currency = "INR"
@@ -33,6 +35,35 @@ def create_order(request):
 
     # Return the order ID to the frontend
     return JsonResponse({"order_id": response["id"]})
+
+@csrf_exempt
+def verify_payment(request):
+    if request.method == 'POST':
+        # Extract the payment details from request
+        payment_id = request.POST.get('razorpay_payment_id')
+        order_id = request.POST.get('razorpay_order_id')
+        signature = request.POST.get('razorpay_signature')
+        
+        # Setup data for signature verification
+        params_dict = {
+            'razorpay_order_id': order_id,
+            'razorpay_payment_id': payment_id,
+            'razorpay_signature': signature
+        }
+
+        # Verify the payment signature
+        try:
+            client.utility.verify_payment_signature(params_dict)
+            # If verification is successful, you can mark the payment as successful in your database
+            # Update your order model accordingly
+            # e.g., update_order_status(order_id, 'Paid')
+            
+            return JsonResponse({"status": "Payment verification successful"})
+        except razorpay.errors.SignatureVerificationError:
+            # If verification fails, respond accordingly
+            return JsonResponse({"status": "Payment verification failed"}, status=400)
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
 
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
