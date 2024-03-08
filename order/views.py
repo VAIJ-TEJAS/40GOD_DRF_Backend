@@ -82,6 +82,21 @@ class OrderViewSet(viewsets.ModelViewSet):
             return Response(
                 {"error": "Your cart is empty."}, status=status.HTTP_400_BAD_REQUEST
             )
+        
+        # Extract address_id from the request data
+        address_id = request.data.get('address_id')
+        if not address_id:
+            return Response(
+                {"error": "Address ID is required."}, status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Fetch the address using the address_id
+        try:
+            address = AddressBook.objects.get(id=address_id, user=user)
+        except AddressBook.DoesNotExist:
+            return Response(
+                {"error": "Address not found."}, status=status.HTTP_404_NOT_FOUND
+            )
 
         # Create Order
         order = Order.objects.create(
@@ -101,7 +116,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         # Create Shipment
         shipment = Shipment.objects.create(
             user=user,
-            address=AddressBook.objects.get(id=1),  # should be changed later to user's requested address
+            address=address,
         )
 
         # Create Payment 
