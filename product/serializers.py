@@ -19,13 +19,25 @@ class ImageSerializer(serializers.ModelSerializer):
         model = Image
         fields = ["id", "image"]
 
+class ProductPriceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = [
+            "id",
+            "sku",
+            "name",
+            "price"
+        ]
+
+
 
 class ColorsSerializer(serializers.ModelSerializer):
     image_product = ImageSerializer(many=True, read_only=True, source='image_color')
+    product = ProductPriceSerializer()
 
     class Meta:
         model = Color
-        fields = ["id", "display_name", "color_name", "hex_code", "image_product"]
+        fields = ["id", "display_name", "color_name", "hex_code", "image_product","product"]
 
 
 class ProductSerializer(serializers.ModelSerializer):
