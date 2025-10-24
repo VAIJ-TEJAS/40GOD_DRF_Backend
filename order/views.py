@@ -119,6 +119,8 @@ class OrderViewSet(viewsets.ModelViewSet):
         conversion_rate = 1.0
         converted_total = total_inr
 
+        print("converted_total", converted_total)
+
         # 🟩 Fetch conversion rate from Frankfurter API
         try:
             if user_currency != "INR":
@@ -127,9 +129,12 @@ class OrderViewSet(viewsets.ModelViewSet):
                     timeout=5,
                 )
                 data = res.json()
+                print("currency conversion data", data)
                 if "rates" in data and user_currency in data["rates"]:
                     conversion_rate = data["rates"][user_currency]
+                    print("conversion_rate", conversion_rate)
                     converted_total = total_inr * conversion_rate
+                    print("converted_total after conversion", converted_total)
         except Exception as e:
             print("Currency conversion failed:", e)
 
