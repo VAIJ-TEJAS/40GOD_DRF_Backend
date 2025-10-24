@@ -11,6 +11,7 @@ from shipment.models import Shipment
 from payment.models import Payment
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+import requests
 import razorpay
 import time
 import os
@@ -102,29 +103,65 @@ class OrderViewSet(viewsets.ModelViewSet):
     def calculate_order(self, request):
         user = request.user
         cart_items = CartItem.objects.filter(user=user)
+        user_currency = request.query_params.get("currency", "INR").upper()
 
-        # Calculate order amount based on cart items
-        order_amount = int(
-            sum(
-                item.product_varient.color.product.price * item.quantity
-                for item in cart_items
+        if not cart_items.exists():
+            return Response(
+                {"error": "Your cart is empty."}, status=status.HTTP_400_BAD_REQUEST
             )
-            * 100
-        )  # Convert to paise and ensure int
 
-        order_currency = "INR"
-        order_receipt = "receipt_{}".format(int(time.time()))
-        notes = {}
-
-        response = client.order.create(
-            dict(
-                amount=order_amount,
-                currency=order_currency,
-                receipt=order_receipt,
-                notes=notes,
-            )
+        # Calculate total in INR
+        total_inr = sum(
+            item.product_varient.color.product.price * item.quantity
+            for item in cart_items
         )
 
+        conversion_rate = 1.0
+        converted_total = total_inr
+
+        # 🟩 Fetch conversion rate from Frankfurter API
+        try:
+            if user_currency != "INR":
+                res = requests.get(
+                    f"https://api.frankfurter.app/latest?from=INR&to={user_currency}",
+                    timeout=5,
+                )
+                data = res.json()
+                if "rates" in data and user_currency in data["rates"]:
+                    conversion_rate = data["rates"][user_currency]
+                    converted_total = total_inr * conversion_rate
+        except Exception as e:
+            print("Currency conversion failed:", e)
+
+        # Razorpay expects amount in smallest unit (e.g., cents, paise)
+        order_amount = int(converted_total * 100)
+        order_currency = user_currency
+        order_receipt = f"receipt_{int(time.time())}"
+
+        try:
+            razorpay_order = client.order.create(
+                dict(
+                    amount=order_amount,
+                    currency=order_currency,
+                    receipt=order_receipt,
+                    notes={"converted_from": "INR"},
+                )
+            )
+        except Exception as e:
+            print("Razorpay order creation failed:", e)
+            return Response(
+                {"error": "Razorpay order creation failed"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
         return Response(
-            {"order_id": response["id"], "razorpay_key_id": os.getenv("KEY_ID")}
+            {
+                "order_id": razorpay_order["id"],
+                "razorpay_key_id": os.getenv("KEY_ID"),
+                "base_currency": "INR",
+                "user_currency": user_currency,
+                "rate": conversion_rate,
+                "converted_total": round(converted_total, 2),
+            },
+            status=status.HTTP_200_OK,
         )
