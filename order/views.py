@@ -129,8 +129,8 @@ class OrderViewSet(viewsets.ModelViewSet):
                 data = res.json()
                 if "rates" in data and user_currency in data["rates"]:
                     conversion_rate = data["rates"][user_currency]
-                    converted_total = float(total_inr) * float(conversion_rate)
-                    print("converted_total after conversion", converted_total)
+                    converted_total = round(float(total_inr) * float(conversion_rate), 2)
+
         except Exception as e:
             print("Currency conversion failed:", e)
 
